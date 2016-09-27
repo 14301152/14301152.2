@@ -1,0 +1,70 @@
+import socket
+import time
+  
+class homework(object):
+  
+    def __init__(self, HOST, PORT):
+         
+        #socket框架搭建
+        self.socket = socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        socket1.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        socket1.bind((HOST, PORT))
+        socket1.listen(0)
+      
+    def serve_forever(self):
+        socket1 = self.socket
+        while True:
+            self.client_connection, client_address = socket1.accept()
+            self.request()
+  
+    def request(self):
+        self.data = data = self.client_connection.recv(1024)[:]
+        self.deal_data(data)
+        response = self.get_response()
+        self.finish_response(response)
+        
+    def get_response(self):
+        #判断与响应
+        path1 = self.path[1:]
+        if path1[-5:] == '.html' :
+            try:
+                response = open(path1).read( )
+                self.status = '200 OK'
+            except:
+                self.status = '404 Not Found'
+                response = '404 Not Found'
+        else :
+            response = 'hello ' + path1
+            self.status = '200 OK'
+        return response
+  
+    def deal_data(self, data):
+        request_line = data.splitlines()[0][:]
+        (self.request_method, self.path,self.request_version) = request_line.split()
+    
+    def finish_response(self, response):
+        try:
+            #补齐返回内容
+            headers = [('Content-type', 'text/html')]
+            status = self.status
+            response2 = 'HTTP/1.1 {status}\r\n'.format(status=status)
+            nowtime = time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.localtime())
+            headers += [('Date', nowtime)]
+            for header in headers:
+                response2 += '{0}: {1}\r\n'.format(*header)
+            response2 += 'Server: WSGIServer 0.2\r\n\r\n'
+            for data in response:
+                response2 += data
+            self.client_connection.sendall(response2)
+        finally:
+            self.client_connection.close()
+            
+  
+def make_server(HOST, PORT):
+    server = homework(HOST, PORT)
+    return server
+  
+  
+if __name__ == '__main__':
+    httpd = make_server('', 8888)
+    httpd.serve_forever()
